@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<script src="http://bitwiseshiftleft.github.io/sjcl/sjcl.js"></script>
+
+<script>
+/**
+This program takes the Genesis block header and 
+find its hash. It calls sjcl's toBits() function,
+plugs the result into sjcl's hashing function,
+and converts the resulting array of integers into
+a hexadecimal hash.
+*/
+
+//The genesis block header
+var string = "0100000000" +
+	"000000000000000000000000000000000000000000000000000000000000003BA3EDFD7" +
+	"A7B12B27AC72C3E67768F617FC81BC3888A51323A9FB8AA4B1E5E4A29AB5F49FFFF001D" +
+	"1DAC2B7C";
+var arrayBits = sjcl.codec.hex.toBits(string);
+//The initial hash
+var hash1 = hashToHex(sjcl.hash.sha256.hash(arrayBits));
+//Now hash it a second time
+arrayBits = sjcl.codec.hex.toBits(hash1);
+var hash2 = sjcl.hash.sha256.hash(arrayBits);
+//Reverse the bytes
+hash2 = reverseHexBytes(hashToHex(hash2));
+
+document.write("Genesis block trial hash:<br/>");
+document.write(hash2 + "<br/>");
+document.write("Genesis block actual hash (from Bitcoin.it):<br/>");
+document.write("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f".toUpperCase());
+
+//Convert the hash from an array of 8 big endian integers into a hex in big endian order.
+function hashToHex(data) {
+	var hash = "";
+	for(var i = 0; i < data.length; i++) {
+	
+		//If the number is between 2 ** 29 and 2 ** 32, this
+		//for loop has no effect. If it is below that number,
+		//leading zeros must be added.
+		for(var x = 4; x <= 28; x += 4) {
+			if((data[i] >>> 0) < (2 ** x))
+				hash += "0";
+		}
+		//Converts the integer from signed to unsigned and then puts it in hex form.
+		hash += (data[i] >>> 0).toString(16);
+	}
+	return hash.toUpperCase();
+}
+
+//Reverse the order of the hex hash.
+function reverseHexBytes(hashHex) {
+	var hash = "";
+	for(var i = 0; i < hashHex.length; i += 2) {
+		hash = hashHex.substring(i, i + 2) + hash;
+	}
+	return hash;
+}
+</script>
+
+</body>
+</html>
